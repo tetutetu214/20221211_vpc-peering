@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: VPC Peering Inviter Create
+# ------------------------------------------------------------#
+#  Metadata
+# ------------------------------------------------------------#
+Metadata: 
+  "AWS::CloudFormation::Interface": 
+    ParameterGroups: 
+      - Label: 
+          default: "VPCPeering Configuration"
+        Parameters: 
+          - VpcId
+          - PeerVpcId
+          - PeerOwnerId
+          - PeerRoleArn
+          - AccountId
+
+    ParameterLabels: 
+      VpcId: 
+        default: "VpcId"
+      PeerVpcId: 
+        default: "VPC ID to Connect"
+      PeerOwnerId: 
+        default: "Peering Account"
+      PeerRoleArn: 
+        default: "Peering IAM ARN"
+      AccountId: 
+        default: "Peering Account"
+
+# ------------------------------------------------------------#
+# Input Parameters
+# ------------------------------------------------------------# 
+Parameters:
+  VpcId:
+    Type: String
+    Default: "cfn-inamura-A"
+  PeerVpcId:
+    Type: String
+    Default: "cfn-inamura-A"
+  PeerOwnerId:
+    Type: String
+    Default: "cfn-inamura-A"
+  PeerRoleArn:
+    Type: String
+    Default: "cfn-inamura-A"
+  AccountId:
+    Type: String
+    Default: "cfn-inamura-A"
+
+# ------------------------------------------------------------#
+#  Resources
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+#  VPCPeering
+# ------------------------------------------------------------#
+  VPCPeer: 
+    Type: AWS::EC2::VPCPeeringConnection
+    DependsOn: VPCPeeringRole
+    Properties: 
+      VpcId: !Ref VpcId
+      PeerVpcId: !Ref PeerVpcId
+      PeerOwnerId: !Ref AccountId
+      PeerRoleArn: !Ref PeerRoleArn
+# ------------------------------------------------------------#
+#  Role
+# ------------------------------------------------------------#  
+  VPCPeeringRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: VPCPeeringRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              AWS: !Ref AccountId
+      Policies:
+        - PolicyName: 'AcceptVpcPeering'
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: 'ec2:AcceptVpcPeeringConnection'
+                Resource: '*'
+# ------------------------------------------------------------#
+#  Outputs
+# ------------------------------------------------------------#
+Outputs:
+  RoleARN:
+    Value: !GetAtt 
+      - VPCPeeringRole
+      - Arn
